@@ -4,8 +4,14 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * Проверки генератора сравнения для режимов {@code 1 поток} и {@code N потоков}.
+ */
 class ConcurrentPiDigitGeneratorTest {
 
+    /**
+     * Проверяет корректный префикс числа {@code Pi} при автоматическом выборе числа потоков.
+     */
     @Test
     void generatesKnownPiPrefixForConcurrentMode() {
         ConcurrentPiDigitGenerator generator = new ConcurrentPiDigitGenerator();
@@ -22,6 +28,9 @@ class ConcurrentPiDigitGeneratorTest {
         assertThat(result.processorCount()).isGreaterThanOrEqualTo(1);
     }
 
+    /**
+     * Проверяет корректный префикс числа {@code Pi} при явном запуске в одном потоке.
+     */
     @Test
     void generatesKnownPiPrefixForSingleThreadMode() {
         ConcurrentPiDigitGenerator generator = new ConcurrentPiDigitGenerator();

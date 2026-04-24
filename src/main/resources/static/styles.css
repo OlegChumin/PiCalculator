@@ -11,6 +11,7 @@
     --shadow: 0 24px 60px rgba(56, 37, 24, 0.12);
 }
 
+/* Базовые глобальные настройки страницы и цветовой палитры интерфейса. */
 * {
     box-sizing: border-box;
 }
@@ -176,10 +177,12 @@ button.ghost {
     border-radius: 32px;
 }
 
+/* Общий контейнер секции сравнения режимов. */
 .compare-rail {
     padding: 16px 4px 8px;
 }
 
+/* Три колонки: подписи строк, фиксированный префикс и общий прокручиваемый хвост. */
 .compare-layout {
     display: grid;
     grid-template-columns: 260px max-content minmax(0, 1fr);
@@ -192,11 +195,13 @@ button.ghost {
     gap: 18px;
 }
 
+/* Фиксированный префикс "3." для каждой из строк. */
 .compare-prefixes {
     display: grid;
     gap: 18px;
 }
 
+/* Общая горизонтальная область прокрутки для обеих строк сразу. */
 .compare-viewport {
     overflow-x: auto;
     padding: 4px 4px 8px;
@@ -210,6 +215,7 @@ button.ghost {
     min-width: max-content;
 }
 
+/* Две горизонтальные дорожки цифр: верхняя и нижняя. */
 .digit-row {
     display: flex;
     gap: 12px;
@@ -244,6 +250,7 @@ button.ghost {
     letter-spacing: 0.08em;
 }
 
+/* Базовая карточка отдельного символа числа Pi. */
 .digit-tile {
     flex: 0 0 auto;
     min-width: 96px;
@@ -264,6 +271,7 @@ button.ghost {
     border-color: rgba(191, 79, 40, 0.16);
 }
 
+/* Увеличенная ширина нужна, чтобы префикс "3." не схлопывался визуально. */
 .digit-tile.prefix-combined {
     min-width: 112px;
 }

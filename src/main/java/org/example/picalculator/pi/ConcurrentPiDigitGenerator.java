@@ -87,6 +87,17 @@ public class ConcurrentPiDigitGenerator {
         return new PiComputationResult(events, threadCount, processors);
     }
 
+    /**
+     * Строит временную ленту готовности цифр на основе последовательно стабилизирующихся префиксов результата.
+     *
+     * @param chunkResults частичные суммы по диапазонам ряда
+     * @param arctan239 уже полностью вычисленный вклад {@code arctan(1 / 239)}
+     * @param arctan239CompletedAt момент готовности последовательной части формулы
+     * @param finalPi окончательная строка числа {@code Pi}
+     * @param mathContext контекст точности для промежуточной арифметики
+     * @param startedAt момент старта всего вычисления
+     * @return список событий с индексами символов и временем их стабилизации
+     */
     private List<PiDigitEvent> buildTimedEvents(
             List<ChunkResult> chunkResults,
             BigDecimal arctan239,
@@ -119,6 +130,15 @@ public class ConcurrentPiDigitGenerator {
         return events;
     }
 
+    /**
+     * Вычисляет набор диапазонов ряда в пуле потоков и возвращает результаты, отсортированные по исходному порядку.
+     *
+     * @param x знаменатель аргумента арктангенса
+     * @param ranges диапазоны термов ряда
+     * @param mathContext контекст точности вычислений
+     * @param threadCount число потоков в пуле
+     * @return частичные суммы по диапазонам
+     */
     private List<ChunkResult> computeArctanChunks(int x, List<ChunkRange> ranges, MathContext mathContext, int threadCount) {
         ExecutorService executor = Executors.newFixedThreadPool(Math.max(1, Math.min(ranges.size(), threadCount)));
         try {
@@ -138,6 +158,14 @@ public class ConcurrentPiDigitGenerator {
         }
     }
 
+    /**
+     * Считает один непрерывный диапазон термов ряда для {@code arctan(1 / x)}.
+     *
+     * @param x знаменатель аргумента арктангенса
+     * @param range диапазон термов, назначенный потоку
+     * @param mathContext контекст точности вычислений
+     * @return частичная сумма диапазона и момент её готовности
+     */
     private ChunkResult computeArctanChunk(int x, ChunkRange range, MathContext mathContext) {
         BigDecimal xValue = BigDecimal.valueOf(x);
         BigDecimal xSquared = BigDecimal.valueOf((long) x * x);
@@ -157,6 +185,14 @@ public class ConcurrentPiDigitGenerator {
         return new ChunkResult(range.startTerm(), sum, System.nanoTime());
     }
 
+    /**
+     * Последовательно вычисляет ряд для {@code arctan(1 / x)} без распараллеливания.
+     *
+     * @param x знаменатель аргумента арктангенса
+     * @param terms число термов ряда
+     * @param mathContext контекст точности вычислений
+     * @return сумма ряда для заданного количества термов
+     */
     private BigDecimal computeArctanSequential(int x, int terms, MathContext mathContext) {
         BigDecimal xValue = BigDecimal.valueOf(x);
         BigDecimal xSquared = BigDecimal.valueOf((long) x * x);
@@ -176,11 +212,25 @@ public class ConcurrentPiDigitGenerator {
         return sum;
     }
 
+    /**
+     * Оценивает количество термов ряда, достаточное для получения заданного числа цифр после запятой.
+     *
+     * @param x знаменатель аргумента арктангенса
+     * @param digitsAfterDecimal сколько цифр после запятой требуется получить
+     * @return оценка числа термов с небольшим запасом по точности
+     */
     private int estimateTermCount(int x, int digitsAfterDecimal) {
         double terms = (digitsAfterDecimal + EXTRA_PRECISION) / (2.0 * Math.log10(x));
         return Math.max(4, (int) Math.ceil(terms) + 4);
     }
 
+    /**
+     * Делит диапазон термов ряда на почти равные непрерывные куски для параллельной обработки.
+     *
+     * @param totalTerms общее число термов ряда
+     * @param chunkCount желаемое число диапазонов
+     * @return список непустых диапазонов термов
+     */
     private List<ChunkRange> splitIntoRanges(int totalTerms, int chunkCount) {
         List<ChunkRange> ranges = new ArrayList<>(chunkCount);
         int baseChunkSize = totalTerms / chunkCount;
@@ -199,10 +249,24 @@ public class ConcurrentPiDigitGenerator {
         return ranges;
     }
 
+    /**
+     * Преобразует десятичное значение {@code Pi} в строку фиксированной длины без округления вверх.
+     *
+     * @param value числовое значение {@code Pi}
+     * @param digitsAfterDecimal сколько цифр после запятой нужно оставить
+     * @return строковое представление числа с усечением лишней точности
+     */
     private String formatPi(BigDecimal value, int digitsAfterDecimal) {
         return value.setScale(digitsAfterDecimal, RoundingMode.DOWN).toPlainString();
     }
 
+    /**
+     * Определяет длину общего префикса двух строк.
+     *
+     * @param left первая строка
+     * @param right вторая строка
+     * @return число совпадающих символов с начала строки
+     */
     private int commonPrefixLength(String left, String right) {
         int limit = Math.min(left.length(), right.length());
         int index = 0;
@@ -212,9 +276,22 @@ public class ConcurrentPiDigitGenerator {
         return index;
     }
 
+    /**
+     * Непрерывный диапазон термов ряда, назначаемый одному вычислительному заданию.
+     *
+     * @param startTerm индекс первого терма диапазона
+     * @param endTerm индекс терма, следующего за последним элементом диапазона
+     */
     private record ChunkRange(int startTerm, int endTerm) {
     }
 
+    /**
+     * Результат вычисления одного диапазона термов ряда.
+     *
+     * @param startTerm индекс первого терма диапазона
+     * @param sum частичная сумма диапазона
+     * @param completedAtNanos момент завершения вычисления диапазона
+     */
     private record ChunkResult(int startTerm, BigDecimal sum, long completedAtNanos) {
     }
 }

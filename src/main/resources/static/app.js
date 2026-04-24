@@ -1,5 +1,6 @@
 const { useEffect, useRef, useState } = React;
 
+// Преобразует время вычисления в удобную для интерфейса строку.
 function formatElapsed(ms) {
     if (ms < 1000) {
         return `${ms} ms`;
@@ -23,6 +24,7 @@ function formatElapsed(ms) {
     return `${(hours / 24).toFixed(2)} d`;
 }
 
+// Главный React-компонент страницы сравнения однопоточного и многопоточного режимов.
 function App() {
     const [digits, setDigits] = useState(300);
     const [delayMs, setDelayMs] = useState(35);
@@ -43,12 +45,14 @@ function App() {
             return;
         }
 
+        // Во время анимации лента следует за последними появившимися цифрами.
         compareViewportRef.current.scrollTo({
             left: compareViewportRef.current.scrollWidth,
             behavior: "smooth"
         });
     }, [tracks]);
 
+    // Закрывает SSE-подключение и останавливает локальный таймер проигрывания.
     function stopStream() {
         if (streamRef.current) {
             streamRef.current.close();
@@ -61,6 +65,7 @@ function App() {
         }
     }
 
+    // Запрашивает у backend полный снимок сравнения и запускает его плавное воспроизведение на фронтенде.
     function startStream() {
         stopStream();
         setTracks({ single: [], concurrent: [] });
@@ -97,6 +102,7 @@ function App() {
         };
     }
 
+    // Показывает снимок не мгновенно, а по шагам, чтобы анимация оставалась читаемой.
     function playTracks(single, concurrent, delay) {
         const total = Math.max(single.length, concurrent.length);
 
@@ -137,6 +143,7 @@ function App() {
     const singleShown = tracks.single.length;
     const concurrentShown = tracks.concurrent.length;
 
+    // Рисует одну плитку с символом числа Pi и временем его готовности.
     function renderDigitTile(title, item, extraClass = "") {
         const classes = ["digit-tile"];
         if (item.symbol === ".") {
@@ -154,6 +161,7 @@ function App() {
         );
     }
 
+    // Формирует фиксированный префикс "3." перед общей прокручиваемой шкалой.
     function renderPrefixTile(title, items) {
         const prefixItems = items.slice(0, 2);
         if (prefixItems.length === 0) {

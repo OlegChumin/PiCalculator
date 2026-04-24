@@ -34,6 +34,7 @@ public class PiStreamController {
      * Создаёт контроллер потока вычисления {@code Pi}.
      *
      * @param piDigitGenerator генератор цифр числа {@code Pi}
+     * @param concurrentPiDigitGenerator генератор сравнения для режима "один поток против нескольких"
      */
     public PiStreamController(PiDigitGenerator piDigitGenerator, ConcurrentPiDigitGenerator concurrentPiDigitGenerator) {
         this.piDigitGenerator = piDigitGenerator;
@@ -102,7 +103,6 @@ public class PiStreamController {
      * @param emitter SSE-канал до браузера
      * @param active флаг активности соединения
      * @param digits количество цифр после запятой
-     * @param delayMs задержка между событиями
      */
     private void streamDigits(SseEmitter emitter, AtomicBoolean active, int digits) {
         long startedAt = System.nanoTime();
@@ -133,8 +133,16 @@ public class PiStreamController {
         }
     }
 
+    /**
+     * Собирает снимок сравнения для одного и того же алгоритма в режимах {@code 1 поток} и {@code N потоков}.
+     *
+     * @param emitter SSE-канал до браузера
+     * @param active флаг активности соединения
+     * @param digits количество цифр после запятой
+     */
     private void streamComparison(SseEmitter emitter, AtomicBoolean active, int digits) {
         try {
+            // Для честного сравнения запускаем один и тот же алгоритм в двух режимах исполнения.
             CompletableFuture<PiComputationResult> sequentialFuture = CompletableFuture.supplyAsync(
                     () -> concurrentPiDigitGenerator.generateDigits(digits, 1)
             );

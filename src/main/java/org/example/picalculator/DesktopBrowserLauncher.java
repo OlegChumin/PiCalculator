@@ -49,6 +49,7 @@ public class DesktopBrowserLauncher {
 
         Thread.ofVirtual().start(() -> {
             try {
+                // Даём встроенному HTTP-серверу короткое время на приём первого запроса.
                 Thread.sleep(750);
                 Desktop.getDesktop().browse(URI.create(applicationUrl));
             } catch (IOException | InterruptedException ex) {

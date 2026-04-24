@@ -24,6 +24,7 @@ public class PiCalculatorApplication {
      */
     public static void main(String[] args) {
         SpringApplication application = new SpringApplication(PiCalculatorApplication.class);
+        // Отключение headless-режима нужно для локального launcher-сценария с автооткрытием браузера.
         application.setHeadless(false);
         application.run(args);
     }
