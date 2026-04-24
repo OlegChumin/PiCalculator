@@ -62,17 +62,17 @@ powershell -ExecutionPolicy Bypass -File .\run-docker.ps1
 http://localhost:8181/
 ```
 
-### Готовый EXE для Windows
+### Готовая Windows-сборка
 
 В репозитории можно собрать:
 
-- готовый Windows installer `.exe`;
+- готовый Windows installer `.msi`;
 - удобный Windows launcher `.exe`;
 - переносимую локальную сборку с уже встроенной `Java runtime`.
 
-### Подготовка Windows для сборки EXE
+### Подготовка Windows для сборки
 
-Чтобы в этом проекте можно было собирать `exe`, на Windows должны быть установлены:
+Чтобы в этом проекте можно было собирать Windows-дистрибутив, на Windows должны быть установлены:
 
 - `JDK 21`
 - `.NET SDK 9`
@@ -106,14 +106,14 @@ choco install wixtoolset -y
 
 После установки желательно открыть новый терминал, чтобы обновился `PATH`.
 
-### Как подготовить установочный EXE
+### Как подготовить Windows-дистрибутив
 
 Порядок действий:
 
 1. Откройте проект в `PowerShell`.
 2. Убедитесь, что установлены `JDK 21`, `.NET SDK 9` и `WiX Toolset`.
 3. При необходимости проверьте команды `java -version`, `dotnet --version`, `candle.exe -?`, `light.exe -?`.
-4. Запустите сборку `exe` командой ниже.
+4. Запустите сборку командой ниже.
 
 Команда сборки:
 
@@ -124,17 +124,17 @@ powershell -ExecutionPolicy Bypass -File .\build-exe.ps1
 После сборки появятся:
 
 ```text
-dist\PiCalculator-1.0.0.exe
+dist\PiCalculator-1.0.0.msi
 dist\PiCalculator-Start.exe
 dist\PiCalculator\PiCalculator.exe
 ```
 
 Запуск:
 
-- если нужен один файл для передачи другому человеку: используйте `dist\PiCalculator-1.0.0.exe`;
-- это полноценный Windows installer;
+- если нужен один файл для передачи другому человеку: используйте `dist\PiCalculator-1.0.0.msi`;
+- это основной Windows installer;
 - он устанавливает приложение вместе со встроенной Java runtime;
-- после установки приложение можно запускать как обычную Windows-программу;
+- после установки приложение нужно запускать не этим файлом, а через ярлык `PiCalculator` в меню `Пуск` или на рабочем столе;
 - удобный локальный вариант для разработчика: `dist\PiCalculator-Start.exe`;
 - это удобный Windows launcher без консоли;
 - он сам найдёт portable-сборку и запустит приложение правильно;
@@ -143,9 +143,10 @@ dist\PiCalculator\PiCalculator.exe
 
 Важно:
 
-- `dist\PiCalculator-1.0.0.exe` — основной установочный файл для передачи;
+- `dist\PiCalculator-1.0.0.msi` — основной установщик, а не само приложение;
 - `dist\PiCalculator-Start.exe` — основной файл для запуска;
 - `dist\PiCalculator\PiCalculator.exe` — это переносимая portable-сборка;
+- если повторно запускать `msi` после установки, Windows покажет экран обслуживания/переустановки — это нормальное поведение для installer'а;
 - для запуска нужен весь каталог `dist`, потому что `PiCalculator-Start.exe` использует папку `dist\PiCalculator`;
 - если запускать внутренний `dist\PiCalculator\PiCalculator.exe` отдельно или после копирования одного файла, можно получить ошибку `Failed to launch JVM`;
 - переносить нужно либо весь каталог `dist`, либо как минимум `PiCalculator-Start.exe` вместе с папкой `PiCalculator`.

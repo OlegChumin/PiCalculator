@@ -9,7 +9,7 @@ $distDir = Join-Path $PSScriptRoot "dist"
 $imageDir = Join-Path $distDir $projectName
 $launcherPublishDir = Join-Path $buildDir "windows-launcher-publish"
 $launcherTarget = Join-Path $distDir "$projectName-Start.exe"
-$installerTarget = Join-Path $distDir "$projectName-1.0.0.exe"
+$installerMsiTarget = Join-Path $distDir "$projectName-1.0.0.msi"
 $wixBin = "C:\Program Files (x86)\WiX Toolset v3.14\bin"
 
 if (Test-Path $inputDir) {
@@ -28,8 +28,8 @@ if (Test-Path $launcherTarget) {
     Remove-Item $launcherTarget -Force
 }
 
-if (Test-Path $installerTarget) {
-    Remove-Item $installerTarget -Force
+if (Test-Path $installerMsiTarget) {
+    Remove-Item $installerMsiTarget -Force
 }
 
 New-Item -ItemType Directory -Path $inputDir | Out-Null
@@ -57,7 +57,7 @@ jpackage `
   --app-version "1.0.0"
 
 jpackage `
-  --type exe `
+  --type msi `
   --name $projectName `
   --input $inputDir `
   --main-jar $jarName `
@@ -85,4 +85,4 @@ Copy-Item (Join-Path $launcherPublishDir "WindowsLauncher.exe") $launcherTarget
 
 Write-Output "Portable app image created: $imageDir\\$projectName.exe"
 Write-Output "Windows launcher created: $launcherTarget"
-Write-Output "Windows installer created: $installerTarget"
+Write-Output "Windows MSI installer created: $installerMsiTarget"
