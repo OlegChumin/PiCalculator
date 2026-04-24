@@ -70,6 +70,51 @@ http://localhost:8181/
 - удобный Windows launcher `.exe`;
 - переносимую локальную сборку с уже встроенной `Java runtime`.
 
+### Подготовка Windows для сборки EXE
+
+Чтобы в этом проекте можно было собирать `exe`, на Windows должны быть установлены:
+
+- `JDK 21`
+- `.NET SDK 9`
+- `WiX Toolset 3.x`
+- `PowerShell`
+
+Проверка, что инструменты доступны:
+
+```powershell
+java -version
+dotnet --version
+candle.exe -?
+light.exe -?
+```
+
+Если `candle.exe` или `light.exe` не находятся, обычно помогает:
+
+- закрыть текущий терминал;
+- открыть новый `PowerShell`;
+- повторить проверку команд.
+
+### Установка нужного ПО в Windows
+
+Пример установки через `Chocolatey`:
+
+```powershell
+choco install openjdk21 -y
+choco install dotnet-sdk -y
+choco install wixtoolset -y
+```
+
+После установки желательно открыть новый терминал, чтобы обновился `PATH`.
+
+### Как подготовить установочный EXE
+
+Порядок действий:
+
+1. Откройте проект в `PowerShell`.
+2. Убедитесь, что установлены `JDK 21`, `.NET SDK 9` и `WiX Toolset`.
+3. При необходимости проверьте команды `java -version`, `dotnet --version`, `candle.exe -?`, `light.exe -?`.
+4. Запустите сборку `exe` командой ниже.
+
 Команда сборки:
 
 ```powershell
