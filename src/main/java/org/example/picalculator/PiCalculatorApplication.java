@@ -23,7 +23,9 @@ public class PiCalculatorApplication {
      * @param args аргументы командной строки
      */
     public static void main(String[] args) {
-        SpringApplication.run(PiCalculatorApplication.class, args);
+        SpringApplication application = new SpringApplication(PiCalculatorApplication.class);
+        application.setHeadless(false);
+        application.run(args);
     }
 
 }

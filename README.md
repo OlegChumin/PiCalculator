@@ -62,6 +62,70 @@ powershell -ExecutionPolicy Bypass -File .\run-docker.ps1
 http://localhost:8181/
 ```
 
+### Готовый EXE для Windows
+
+В репозитории можно собрать:
+
+- готовый Windows installer `.exe`;
+- удобный Windows launcher `.exe`;
+- переносимую локальную сборку с уже встроенной `Java runtime`.
+
+Команда сборки:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\build-exe.ps1
+```
+
+После сборки появятся:
+
+```text
+dist\PiCalculator-1.0.0.exe
+dist\PiCalculator-Start.exe
+dist\PiCalculator\PiCalculator.exe
+```
+
+Запуск:
+
+- если нужен один файл для передачи другому человеку: используйте `dist\PiCalculator-1.0.0.exe`;
+- это полноценный Windows installer;
+- он устанавливает приложение вместе со встроенной Java runtime;
+- после установки приложение можно запускать как обычную Windows-программу;
+- удобный локальный вариант для разработчика: `dist\PiCalculator-Start.exe`;
+- это удобный Windows launcher без консоли;
+- он сам найдёт portable-сборку и запустит приложение правильно;
+- backend поднимется на `8181`;
+- браузер откроется автоматически.
+
+Важно:
+
+- `dist\PiCalculator-1.0.0.exe` — основной установочный файл для передачи;
+- `dist\PiCalculator-Start.exe` — основной файл для запуска;
+- `dist\PiCalculator\PiCalculator.exe` — это переносимая portable-сборка;
+- для запуска нужен весь каталог `dist`, потому что `PiCalculator-Start.exe` использует папку `dist\PiCalculator`;
+- если запускать внутренний `dist\PiCalculator\PiCalculator.exe` отдельно или после копирования одного файла, можно получить ошибку `Failed to launch JVM`;
+- переносить нужно либо весь каталог `dist`, либо как минимум `PiCalculator-Start.exe` вместе с папкой `PiCalculator`.
+
+### Как остановить программу
+
+Если приложение было запущено через `Docker`, остановить его можно так:
+
+```powershell
+docker stop pi-calculator-container
+```
+
+Если нужно полностью удалить контейнер:
+
+```powershell
+docker rm -f pi-calculator-container
+```
+
+Разница:
+
+- `docker stop pi-calculator-container` — останавливает контейнер;
+- `docker rm -f pi-calculator-container` — принудительно останавливает и удаляет контейнер.
+
+Если приложение было запущено через `dist\PiCalculator-Start.exe` или через `dist\PiCalculator\PiCalculator.exe`, его можно остановить через `Диспетчер задач Windows`, завершив процесс `PiCalculator.exe`.
+
 ### Альтернативный запуск без Docker
 
 Требуется:

@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "dgSpecHash": "HnFPmtCJ2Kk=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\tschu\\IdeaProjects\\Learning\\PiCalculator\\tools\\WindowsLauncher\\WindowsLauncher.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\tschu\\.nuget\\packages\\microsoft.net.illink.tasks\\9.0.15\\microsoft.net.illink.tasks.9.0.15.nupkg.sha512",
+    "C:\\Users\\tschu\\.nuget\\packages\\microsoft.netcore.app.runtime.win-x64\\9.0.15\\microsoft.netcore.app.runtime.win-x64.9.0.15.nupkg.sha512",
+    "C:\\Users\\tschu\\.nuget\\packages\\microsoft.windowsdesktop.app.runtime.win-x64\\9.0.15\\microsoft.windowsdesktop.app.runtime.win-x64.9.0.15.nupkg.sha512",
+    "C:\\Users\\tschu\\.nuget\\packages\\microsoft.aspnetcore.app.runtime.win-x64\\9.0.15\\microsoft.aspnetcore.app.runtime.win-x64.9.0.15.nupkg.sha512"
+  ],
+  "logs": []
+}

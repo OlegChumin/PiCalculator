@@ -1,0 +1,2 @@
+C:\Users\tschu\IdeaProjects\Learning\PiCalculator\build\windows-launcher-publish\WindowsLauncher.pdb
+C:\Users\tschu\IdeaProjects\Learning\PiCalculator\build\windows-launcher-publish\WindowsLauncher.exe
