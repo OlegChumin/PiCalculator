@@ -10,6 +10,13 @@ import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
+/**
+ * REST-контроллер, который стримит цифры числа {@code Pi} на frontend через SSE.
+ * <p>
+ * Каждый символ отправляется отдельным событием с накопленным временем вычисления.
+ * Это позволяет интерфейсу показывать большую цифровую ленту в реальном времени.
+ * </p>
+ */
 @RestController
 public class PiStreamController {
 
@@ -20,10 +27,22 @@ public class PiStreamController {
 
     private final PiDigitGenerator piDigitGenerator;
 
+    /**
+     * Создаёт контроллер потока вычисления {@code Pi}.
+     *
+     * @param piDigitGenerator генератор цифр числа {@code Pi}
+     */
     public PiStreamController(PiDigitGenerator piDigitGenerator) {
         this.piDigitGenerator = piDigitGenerator;
     }
 
+    /**
+     * Открывает SSE-поток и начинает по одной отправлять цифры числа {@code Pi}.
+     *
+     * @param digits сколько цифр после запятой запрашивает клиент
+     * @param delayMs задержка между отправками соседних символов в миллисекундах
+     * @return SSE-эмиттер для передачи цифр на frontend
+     */
     @GetMapping(path = "/api/pi/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter streamPi(
             @RequestParam(defaultValue = "" + DEFAULT_DIGITS) int digits,
@@ -46,6 +65,14 @@ public class PiStreamController {
         return emitter;
     }
 
+    /**
+     * Выполняет вычисление и отправляет клиенту цифры числа {@code Pi}.
+     *
+     * @param emitter SSE-канал до браузера
+     * @param active флаг активности соединения
+     * @param digits количество цифр после запятой
+     * @param delayMs задержка между событиями
+     */
     private void streamDigits(SseEmitter emitter, AtomicBoolean active, int digits, int delayMs) {
         long startedAt = System.nanoTime();
         AtomicLong index = new AtomicLong();

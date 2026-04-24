@@ -5,9 +5,29 @@ import org.springframework.stereotype.Component;
 import java.util.Arrays;
 import java.util.function.Consumer;
 
+/**
+ * Генерирует цифры числа {@code Pi} по одной.
+ * <p>
+ * Используется spigot-алгоритм для десятичного разложения {@code Pi}.
+ * Алгоритм позволяет последовательно получать цифры без вычисления всего
+ * числа целиком в виде строки заранее.
+ * </p>
+ */
 @Component
 public class PiDigitGenerator {
 
+    /**
+     * Генерирует символы числа {@code Pi} и передаёт их потребителю по мере вычисления.
+     * <p>
+     * Первый выведенный символом будет целая часть {@code 3}, сразу после неё
+     * автоматически добавляется десятичная точка {@code .}. Затем передаются
+     * цифры после запятой.
+     * </p>
+     *
+     * @param digitsAfterDecimal сколько цифр после запятой нужно вычислить
+     * @param consumer обработчик очередного вычисленного символа
+     * @throws IllegalArgumentException если {@code digitsAfterDecimal < 0}
+     */
     public void generateDigits(int digitsAfterDecimal, Consumer<Character> consumer) {
         if (digitsAfterDecimal < 0) {
             throw new IllegalArgumentException("digitsAfterDecimal must be >= 0");
@@ -72,6 +92,15 @@ public class PiDigitGenerator {
         emitDigit(predigit, firstDigitEmitted, consumer, skipLeadingZero);
     }
 
+    /**
+     * Передаёт очередную цифру потребителю и при первом выводе добавляет десятичную точку.
+     *
+     * @param digit вычисленная цифра
+     * @param firstDigitEmitted была ли уже выведена первая значащая цифра
+     * @param consumer получатель символа
+     * @param skipLeadingZero нужно ли пропускать начальный служебный ноль алгоритма
+     * @return {@code true}, если цифра действительно была выведена
+     */
     private boolean emitDigit(int digit, boolean firstDigitEmitted, Consumer<Character> consumer, boolean skipLeadingZero) {
         if (skipLeadingZero && digit == 0) {
             return false;
