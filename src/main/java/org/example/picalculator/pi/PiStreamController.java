@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -26,14 +28,16 @@ public class PiStreamController {
     private static final int MAX_DELAY_MS = 500;
 
     private final PiDigitGenerator piDigitGenerator;
+    private final ConcurrentPiDigitGenerator concurrentPiDigitGenerator;
 
     /**
      * Создаёт контроллер потока вычисления {@code Pi}.
      *
      * @param piDigitGenerator генератор цифр числа {@code Pi}
      */
-    public PiStreamController(PiDigitGenerator piDigitGenerator) {
+    public PiStreamController(PiDigitGenerator piDigitGenerator, ConcurrentPiDigitGenerator concurrentPiDigitGenerator) {
         this.piDigitGenerator = piDigitGenerator;
+        this.concurrentPiDigitGenerator = concurrentPiDigitGenerator;
     }
 
     /**
@@ -49,7 +53,6 @@ public class PiStreamController {
             @RequestParam(defaultValue = "" + DEFAULT_DELAY_MS) int delayMs
     ) {
         int safeDigits = Math.clamp(digits, 1, MAX_DIGITS);
-        int safeDelayMs = Math.clamp(delayMs, 0, MAX_DELAY_MS);
 
         SseEmitter emitter = new SseEmitter(0L);
         AtomicBoolean active = new AtomicBoolean(true);
@@ -58,7 +61,35 @@ public class PiStreamController {
         emitter.onTimeout(() -> active.set(false));
         emitter.onError(throwable -> active.set(false));
 
-        Thread worker = Thread.ofVirtual().start(() -> streamDigits(emitter, active, safeDigits, safeDelayMs));
+        Thread worker = Thread.ofVirtual().start(() -> streamDigits(emitter, active, safeDigits));
+        emitter.onCompletion(worker::interrupt);
+        emitter.onTimeout(worker::interrupt);
+
+        return emitter;
+    }
+
+    /**
+     * Открывает поток сравнения однопоточного и многопоточного режимов.
+     *
+     * @param digits сколько цифр после запятой запрашивает клиент
+     * @param delayMs задержка между соседними индексами при визуализации
+     * @return SSE-эмиттер для сравнительного показа двух строк
+     */
+    @GetMapping(path = "/api/pi/compare-stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter comparePi(
+            @RequestParam(defaultValue = "" + DEFAULT_DIGITS) int digits,
+            @RequestParam(defaultValue = "" + DEFAULT_DELAY_MS) int delayMs
+    ) {
+        int safeDigits = Math.clamp(digits, 1, MAX_DIGITS);
+
+        SseEmitter emitter = new SseEmitter(0L);
+        AtomicBoolean active = new AtomicBoolean(true);
+
+        emitter.onCompletion(() -> active.set(false));
+        emitter.onTimeout(() -> active.set(false));
+        emitter.onError(throwable -> active.set(false));
+
+        Thread worker = Thread.ofVirtual().start(() -> streamComparison(emitter, active, safeDigits));
         emitter.onCompletion(worker::interrupt);
         emitter.onTimeout(worker::interrupt);
 
@@ -73,7 +104,7 @@ public class PiStreamController {
      * @param digits количество цифр после запятой
      * @param delayMs задержка между событиями
      */
-    private void streamDigits(SseEmitter emitter, AtomicBoolean active, int digits, int delayMs) {
+    private void streamDigits(SseEmitter emitter, AtomicBoolean active, int digits) {
         long startedAt = System.nanoTime();
         AtomicLong index = new AtomicLong();
 
@@ -88,13 +119,8 @@ public class PiStreamController {
 
                 try {
                     emitter.send(SseEmitter.event().name("digit").data(event));
-
-                    if (delayMs > 0) {
-                        Thread.sleep(delayMs);
-                    }
-                } catch (IOException | InterruptedException ex) {
+                } catch (IOException ex) {
                     active.set(false);
-                    Thread.currentThread().interrupt();
                 }
             });
 
@@ -106,4 +132,37 @@ public class PiStreamController {
             emitter.completeWithError(ex);
         }
     }
+
+    private void streamComparison(SseEmitter emitter, AtomicBoolean active, int digits) {
+        try {
+            CompletableFuture<PiComputationResult> sequentialFuture = CompletableFuture.supplyAsync(
+                    () -> concurrentPiDigitGenerator.generateDigits(digits, 1)
+            );
+            CompletableFuture<PiComputationResult> concurrentFuture = CompletableFuture.supplyAsync(
+                    () -> concurrentPiDigitGenerator.generateDigits(digits)
+            );
+
+            PiComputationResult singleThreadResult = sequentialFuture.join();
+            PiComputationResult concurrentResult = concurrentFuture.join();
+
+            PiComparisonPayload payload = new PiComparisonPayload(
+                    new PiCompareMetadata(
+                            concurrentResult.processorCount(),
+                            concurrentResult.threadCount()
+                    ),
+                    singleThreadResult.events(),
+                    concurrentResult.events()
+            );
+
+            emitter.send(SseEmitter.event().name("snapshot").data(payload));
+
+            if (active.get()) {
+                emitter.send(SseEmitter.event().name("done").data("completed"));
+            }
+            emitter.complete();
+        } catch (IOException ex) {
+            emitter.completeWithError(ex);
+        }
+    }
+
 }

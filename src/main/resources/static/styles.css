@@ -176,13 +176,72 @@ button.ghost {
     border-radius: 32px;
 }
 
-.digit-rail {
-    display: flex;
-    gap: 12px;
-    overflow-x: auto;
+.compare-rail {
     padding: 16px 4px 8px;
+}
+
+.compare-layout {
+    display: grid;
+    grid-template-columns: 260px max-content minmax(0, 1fr);
+    gap: 12px;
+    align-items: start;
+}
+
+.compare-labels {
+    display: grid;
+    gap: 18px;
+}
+
+.compare-prefixes {
+    display: grid;
+    gap: 18px;
+}
+
+.compare-viewport {
+    overflow-x: auto;
+    padding: 4px 4px 8px;
     scroll-behavior: smooth;
     scrollbar-width: thin;
+}
+
+.compare-canvas {
+    display: grid;
+    gap: 18px;
+    min-width: max-content;
+}
+
+.digit-row {
+    display: flex;
+    gap: 12px;
+}
+
+.prefix-row {
+    min-height: 104px;
+}
+
+.track-label-card,
+.row-empty {
+    width: 100%;
+    padding: 18px 20px;
+    border-radius: 22px;
+    border: 1px solid rgba(191, 79, 40, 0.16);
+    background: linear-gradient(180deg, rgba(255, 250, 244, 0.98) 0%, rgba(246, 236, 221, 0.96) 100%);
+    box-shadow: 0 12px 30px rgba(56, 37, 24, 0.08);
+}
+
+.row-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+}
+
+.row-subtitle {
+    margin-top: 8px;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
 }
 
 .digit-tile {
@@ -198,6 +257,15 @@ button.ghost {
 
 .digit-tile.dot {
     min-width: 72px;
+}
+
+.digit-tile.prefix-tile {
+    background: linear-gradient(180deg, rgba(255, 250, 244, 0.98) 0%, rgba(246, 236, 221, 0.96) 100%);
+    border-color: rgba(191, 79, 40, 0.16);
+}
+
+.digit-tile.prefix-combined {
+    min-width: 112px;
 }
 
 .digit-time {
@@ -231,5 +299,14 @@ button.ghost {
     .hero-card,
     .stats-grid {
         grid-template-columns: 1fr;
+    }
+
+    .compare-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .compare-prefixes {
+        grid-auto-flow: column;
+        justify-content: start;
     }
 }

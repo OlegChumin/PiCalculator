@@ -26,64 +26,153 @@ function formatElapsed(ms) {
 function App() {
     const [digits, setDigits] = useState(300);
     const [delayMs, setDelayMs] = useState(35);
-    const [items, setItems] = useState([]);
+    const [tracks, setTracks] = useState({ single: [], concurrent: [] });
+    const [meta, setMeta] = useState({ processors: 0, concurrentThreads: 0 });
     const [status, setStatus] = useState("ready");
-    const [startedAt, setStartedAt] = useState(null);
-    const [finishedAt, setFinishedAt] = useState(null);
+    const [measuredElapsedMs, setMeasuredElapsedMs] = useState(0);
     const streamRef = useRef(null);
-    const railRef = useRef(null);
+    const compareViewportRef = useRef(null);
+    const playbackTimerRef = useRef(null);
 
     useEffect(() => {
         return () => stopStream();
     }, []);
 
     useEffect(() => {
-        if (!railRef.current) {
+        if (!compareViewportRef.current) {
             return;
         }
 
-        railRef.current.scrollTo({
-            left: railRef.current.scrollWidth,
+        compareViewportRef.current.scrollTo({
+            left: compareViewportRef.current.scrollWidth,
             behavior: "smooth"
         });
-    }, [items]);
+    }, [tracks]);
 
     function stopStream() {
         if (streamRef.current) {
             streamRef.current.close();
             streamRef.current = null;
         }
+
+        if (playbackTimerRef.current) {
+            clearTimeout(playbackTimerRef.current);
+            playbackTimerRef.current = null;
+        }
     }
 
     function startStream() {
         stopStream();
-        setItems([]);
+        setTracks({ single: [], concurrent: [] });
+        setMeta({ processors: 0, concurrentThreads: 0 });
+        setMeasuredElapsedMs(0);
         setStatus("streaming");
-        setStartedAt(Date.now());
-        setFinishedAt(null);
 
-        const source = new EventSource(`/api/pi/stream?digits=${digits}&delayMs=${delayMs}`);
+        const source = new EventSource(`/api/pi/compare-stream?digits=${digits}&delayMs=${delayMs}`);
         streamRef.current = source;
 
-        source.addEventListener("digit", event => {
+        source.addEventListener("snapshot", event => {
             const payload = JSON.parse(event.data);
-            setItems(current => [...current, payload]);
+            const single = payload.singleThreadEvents ?? [];
+            const concurrent = payload.concurrentEvents ?? [];
+
+            setMeta(payload.metadata ?? { processors: 0, concurrentThreads: 0 });
+            setMeasuredElapsedMs(Math.max(
+                single.at(-1)?.elapsedMillis ?? 0,
+                concurrent.at(-1)?.elapsedMillis ?? 0
+            ));
+            playTracks(single, concurrent, Math.max(0, Number(delayMs) || 0));
         });
 
         source.addEventListener("done", () => {
-            setStatus("completed");
-            setFinishedAt(Date.now());
-            stopStream();
+            if (streamRef.current) {
+                streamRef.current.close();
+                streamRef.current = null;
+            }
         });
 
         source.onerror = () => {
             setStatus("stopped");
-            setFinishedAt(Date.now());
             stopStream();
         };
     }
 
-    const totalElapsed = startedAt ? formatElapsed((finishedAt ?? Date.now()) - startedAt) : "0 ms";
+    function playTracks(single, concurrent, delay) {
+        const total = Math.max(single.length, concurrent.length);
+
+        if (delay === 0) {
+            setTracks({
+                single: single.map(item => ({ ...item, row: "single" })),
+                concurrent: concurrent.map(item => ({ ...item, row: "concurrent" }))
+            });
+            setStatus("completed");
+            return;
+        }
+
+        let index = 0;
+        const step = () => {
+            setTracks(current => ({
+                single: index < single.length
+                    ? [...current.single, { ...single[index], row: "single" }]
+                    : current.single,
+                concurrent: index < concurrent.length
+                    ? [...current.concurrent, { ...concurrent[index], row: "concurrent" }]
+                    : current.concurrent
+            }));
+
+            index++;
+            if (index >= total) {
+                setStatus("completed");
+                playbackTimerRef.current = null;
+                return;
+            }
+
+            playbackTimerRef.current = setTimeout(step, delay);
+        };
+
+        step();
+    }
+
+    const totalElapsed = formatElapsed(measuredElapsedMs);
+    const singleShown = tracks.single.length;
+    const concurrentShown = tracks.concurrent.length;
+
+    function renderDigitTile(title, item, extraClass = "") {
+        const classes = ["digit-tile"];
+        if (item.symbol === ".") {
+            classes.push("dot");
+        }
+        if (extraClass) {
+            classes.push(extraClass);
+        }
+
+        return (
+            <div className={classes.join(" ")} key={`${title}-${item.index}`}>
+                <div className="digit-time">{formatElapsed(item.elapsedMillis)}</div>
+                <div className="digit-value">{item.symbol}</div>
+            </div>
+        );
+    }
+
+    function renderPrefixTile(title, items) {
+        const prefixItems = items.slice(0, 2);
+        if (prefixItems.length === 0) {
+            return null;
+        }
+
+        const prefixValue = prefixItems.map(item => item.symbol).join("");
+        const elapsedMillis = Math.max(...prefixItems.map(item => item.elapsedMillis ?? 0));
+
+        return (
+            <div className="digit-tile prefix-tile prefix-combined" key={`${title}-prefix`}>
+                <div className="digit-time">{formatElapsed(elapsedMillis)}</div>
+                <div className="digit-value">{prefixValue}</div>
+            </div>
+        );
+    }
+
+    const singleScrolling = tracks.single.slice(2);
+    const concurrentScrolling = tracks.concurrent.slice(2);
 
     return (
         <main className="page-shell">
@@ -92,7 +181,7 @@ function App() {
                     <p className="eyebrow">Spring Boot + React</p>
                     <h1>Визуальное вычисление числа Pi</h1>
                     <p className="lead">
-                        Каждая цифра появляется отдельно. Над ней показывается, за какое время она была вычислена.
+                        Две строки показывают однопоточное и многопоточное вычисление. Каждая цифра стоит строго под своей парой для удобного сравнения.
                     </p>
                     <p className="author-line">Автор Олег Чумин · tschumin.oleg@gmail.com</p>
                 </div>
@@ -125,7 +214,6 @@ function App() {
                         <button className="ghost" onClick={() => {
                             stopStream();
                             setStatus("stopped");
-                            setFinishedAt(Date.now());
                         }}>Стоп</button>
                     </div>
                 </div>
@@ -137,33 +225,71 @@ function App() {
                     <strong>{status}</strong>
                 </article>
                 <article className="stat-card">
-                    <span className="stat-label">Показано символов</span>
-                    <strong>{items.length}</strong>
+                    <span className="stat-label">Однопоточная строка</span>
+                    <strong>{singleShown}</strong>
+                </article>
+                <article className="stat-card">
+                    <span className="stat-label">Многопоточная строка</span>
+                    <strong>{concurrentShown}</strong>
                 </article>
                 <article className="stat-card">
                     <span className="stat-label">Общее время</span>
                     <strong>{totalElapsed}</strong>
+                </article>
+                <article className="stat-card">
+                    <span className="stat-label">Логических процессоров</span>
+                    <strong>{meta.processors || "..."}</strong>
+                </article>
+                <article className="stat-card">
+                    <span className="stat-label">Потоков в многопоточности</span>
+                    <strong>{meta.concurrentThreads || "..."}</strong>
                 </article>
             </section>
 
             <section className="stream-card">
                 <div className="stream-header">
                     <div>
-                        <p className="eyebrow">Поток цифр</p>
-                        <h2>Число Pi на экране</h2>
+                        <p className="eyebrow">Сравнение режимов</p>
+                        <h2>Общая шкала числа Pi</h2>
                     </div>
                 </div>
 
-                <div className="digit-rail" ref={railRef}>
-                    {items.length === 0 ? (
+                <div className="compare-rail">
+                    {singleShown === 0 && concurrentShown === 0 ? (
                         <div className="empty-state">Нажмите «Старт», чтобы начать вычисление.</div>
                     ) : (
-                        items.map(item => (
-                            <div className={`digit-tile ${item.symbol === "." ? "dot" : ""}`} key={item.index}>
-                                <div className="digit-time">{formatElapsed(item.elapsedMillis)}</div>
-                                <div className="digit-value">{item.symbol}</div>
+                        <div className="compare-layout">
+                            <div className="compare-labels">
+                                <div className="track-label-card">
+                                    <div className="row-title">Однопоточность</div>
+                                    <div className="row-subtitle">{`потоков 1 · процессоров ${meta.processors || "..."}`}</div>
+                                </div>
+                                <div className="track-label-card">
+                                    <div className="row-title">Многопоточность</div>
+                                    <div className="row-subtitle">{`потоков ${meta.concurrentThreads || "..."} · процессоров ${meta.processors || "..."}`}</div>
+                                </div>
                             </div>
-                        ))
+
+                            <div className="compare-prefixes">
+                                <div className="digit-row prefix-row">
+                                    {renderPrefixTile("single", tracks.single)}
+                                </div>
+                                <div className="digit-row prefix-row">
+                                    {renderPrefixTile("concurrent", tracks.concurrent)}
+                                </div>
+                            </div>
+
+                            <div className="compare-viewport" ref={compareViewportRef}>
+                                <div className="compare-canvas">
+                                    <div className="digit-row">
+                                        {singleScrolling.map(item => renderDigitTile("single", item))}
+                                    </div>
+                                    <div className="digit-row">
+                                        {concurrentScrolling.map(item => renderDigitTile("concurrent", item))}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     )}
                 </div>
             </section>
