@@ -1,0 +1,235 @@
+:root {
+    color-scheme: light;
+    --bg: #f4efe4;
+    --panel: rgba(255, 251, 245, 0.82);
+    --panel-strong: rgba(255, 248, 238, 0.96);
+    --text: #1d2330;
+    --muted: #6a7284;
+    --accent: #bf4f28;
+    --accent-dark: #8c2f15;
+    --line: rgba(29, 35, 48, 0.1);
+    --shadow: 0 24px 60px rgba(56, 37, 24, 0.12);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: "Manrope", sans-serif;
+    color: var(--text);
+    background:
+        radial-gradient(circle at top left, rgba(255, 183, 77, 0.32), transparent 28%),
+        radial-gradient(circle at top right, rgba(191, 79, 40, 0.16), transparent 24%),
+        linear-gradient(135deg, #f8f2e8 0%, #f2e8da 100%);
+}
+
+.page-shell {
+    width: min(1400px, calc(100vw - 32px));
+    margin: 0 auto;
+    padding: 32px 0 48px;
+}
+
+.hero-card,
+.stream-card,
+.stat-card {
+    backdrop-filter: blur(18px);
+    box-shadow: var(--shadow);
+}
+
+.hero-card {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 24px;
+    padding: 28px;
+    border-radius: 32px;
+    background: var(--panel);
+    border: 1px solid rgba(255, 255, 255, 0.65);
+}
+
+.hero-copy h1,
+.stream-header h2 {
+    margin: 0;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+}
+
+.hero-copy h1 {
+    max-width: 10ch;
+    font-size: clamp(2.5rem, 5vw, 5.6rem);
+    line-height: 0.96;
+}
+
+.lead {
+    max-width: 60ch;
+    font-size: 1.05rem;
+    line-height: 1.7;
+    color: var(--muted);
+}
+
+.author-line {
+    margin: 18px 0 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--accent-dark);
+}
+
+.eyebrow {
+    margin: 0 0 12px;
+    font-size: 0.82rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent-dark);
+}
+
+.controls-card,
+.stream-card,
+.stat-card {
+    border: 1px solid var(--line);
+    background: var(--panel-strong);
+}
+
+.controls-card {
+    display: grid;
+    gap: 16px;
+    align-content: start;
+    padding: 22px;
+    border-radius: 24px;
+}
+
+.controls-card label {
+    display: grid;
+    gap: 10px;
+}
+
+.controls-card span,
+.stat-label {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+}
+
+input {
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: 16px;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.85);
+    font: inherit;
+    color: var(--text);
+}
+
+.button-row {
+    display: flex;
+    gap: 12px;
+}
+
+button {
+    border: 0;
+    border-radius: 999px;
+    padding: 14px 18px;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+button:hover {
+    transform: translateY(-1px);
+}
+
+button.primary {
+    color: white;
+    background: linear-gradient(135deg, var(--accent) 0%, #db7a34 100%);
+    box-shadow: 0 16px 30px rgba(191, 79, 40, 0.28);
+}
+
+button.ghost {
+    color: var(--text);
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid var(--line);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin: 20px 0;
+}
+
+.stat-card {
+    display: grid;
+    gap: 10px;
+    padding: 20px 22px;
+    border-radius: 22px;
+}
+
+.stat-card strong {
+    font-size: clamp(1.4rem, 2vw, 2.1rem);
+}
+
+.stream-card {
+    padding: 24px;
+    border-radius: 32px;
+}
+
+.digit-rail {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding: 16px 4px 8px;
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+}
+
+.digit-tile {
+    flex: 0 0 auto;
+    min-width: 96px;
+    padding: 14px 12px 18px;
+    border-radius: 22px;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 238, 222, 0.92) 100%);
+    border: 1px solid rgba(191, 79, 40, 0.12);
+    text-align: center;
+}
+
+.digit-tile.dot {
+    min-width: 72px;
+}
+
+.digit-time {
+    margin-bottom: 10px;
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent-dark);
+}
+
+.digit-value {
+    font-family: "Space Mono", monospace;
+    font-size: 40px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--text);
+}
+
+.empty-state {
+    width: 100%;
+    padding: 48px 24px;
+    border-radius: 24px;
+    border: 1px dashed rgba(29, 35, 48, 0.18);
+    text-align: center;
+    color: var(--muted);
+    background: rgba(255, 255, 255, 0.5);
+}
+
+@media (max-width: 920px) {
+    .hero-card,
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+}

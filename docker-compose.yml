@@ -1,0 +1,7 @@
+services:
+  pi-calculator:
+    container_name: pi-calculator-container
+    build:
+      context: .
+    ports:
+      - "8181:8181"
